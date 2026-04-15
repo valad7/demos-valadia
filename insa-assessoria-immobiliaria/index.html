@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('k') || '';
+    window.ANTHROPIC_KEY = key;
+    if (!key) {
+        console.warn('Demo: API key no encontrada en URL. El chatbot no funcionara.');
+    }
+})();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INSA ASSESSORIA IMMOBILIARIA - Sistema de Captación IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: #1a365d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .brand-info h1 {
+            color: #1a365d;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .demo-badge {
+            background: linear-gradient(135deg, #c9a84c, #b8941f);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            color: #1a365d;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #c9a84c;
+            border-radius: 2px;
+        }
+
+        /* Chatbot */
+        .chat-container {
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-bubble {
+            background: #1a365d;
+            color: white;
+        }
+
+        .message.user .message-bubble {
+            background: #c9a84c;
+            color: white;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #1a365d;
+        }
+
+        .send-btn {
+            background: #1a365d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #2d4a6b;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: #1a365d;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #1a365d, #2d4a6b);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .success-message {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .leads-counter {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .leads-counter strong {
+            color: #1a365d;
+            font-size: 18px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #c9a84c;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .brand-info h1 {
+                font-size: 20px;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .chat-container {
+                height: 400px;
+            }
+
+            .demo-badge {
+                order: -1;
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            color: #64748b;
+            font-style: italic;
+            padding: 10px 0;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots div {
+            width: 6px;
+            height: 6px;
+            background: #64748b;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots div:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots div:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">IAI</div>
+                    <div class="brand-info">
+                        <h1>INSA ASSESSORIA IMMOBILIARIA</h1>
+                        <div class="tagline">Sistema de captación inteligente — Demo exclusiva</div>
+                    </div>
+                </div>
+                <div class="demo-badge">Demo preparada por Valadia</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="main-content">
+            <!-- Chatbot Section -->
+            <div class="section">
+                <h2 class="section-title">Asistente IA 24/7</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            <div class="message-bubble">
+                                Hola, soy el asistente de INSA ASSESSORIA IMMOBILIARIA. ¿Buscas comprar, alquilar o vender una propiedad en torredembarra?
+                            </div>
+                        </div>
+                    </div>
+                    <div class="typing-indicator" id="typingIndicator">
+                        <span>El asistente está escribiendo</span>
+                        <div class="typing-dots">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Escribe tu mensaje...">
+                        <button id="sendBtn" class="send-btn">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <div class="section">
+                <h2 class="section-title">¿Interesado? Déjanos tus datos</h2>
+                <form id="leadForm">
+                    <div class="form-group">
+                        <label class="form-label" for="fullName">Nombre completo</label>
+                        <input type="text" id="fullName" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Teléfono</label>
+                        <input type="tel" id="phone" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="propertyType">Tipo</label>
+                        <select id="propertyType" class="form-select" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="comprar">Comprar</option>
+                            <option value="alquilar">Alquilar</option>
+                            <option value="vender">Vender</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="budget">Presupuesto</label>
+                        <select id="budget" class="form-select" required>
+                            <option value="">Selecciona un rango</option>
+                            <option value="0-100000">Hasta 100.000€</option>
+                            <option value="100000-200000">100.000€ - 200.000€</option>
+                            <option value="200000-300000">200.000€ - 300.000€</option>
+                            <option value="300000-500000">300.000€ - 500.000€</option>
+                            <option value="500000+">Más de 500.000€</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="message">Mensaje</label>
+                        <textarea id="message" class="form-textarea" placeholder="Cuéntanos más sobre lo que buscas..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Quiero que me contacten</button>
+                    
+                    <div id="successMessage" class="success-message">
+                        ¡Gracias! Un agente de INSA ASSESSORIA IMMOBILIARIA te contactará en menos de 5 minutos
+                    </div>
+                </form>
+                
+                <div class="leads-counter">
+                    <div>Leads capturados hoy: <strong id="leadsCount">0</strong></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            Demo exclusiva preparada por Valadia · <a href="https://valadia.com" target="_blank">valadia.com</a>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize leads counter with random number
+        const leadsCount = Math.floor(Math.random() * 10) + 3; // 3-12
+        document.getElementById('leadsCount').textContent = le
